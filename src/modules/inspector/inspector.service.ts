@@ -21,9 +21,9 @@ export class InspectorService {
     return this.model
       .findById(id)
       .populate('auth', 'username role')
-      .populate('region')
-      .populate('district')
-      .populate('neighborhood')
+      .populate('address.region')
+      .populate('address.district')
+      .populate('address.neighborhood')
       .populate('workplaces')
 
       .lean();
@@ -33,9 +33,9 @@ export class InspectorService {
     return this.model
       .findOne({ auth })
       .populate('auth', 'username role')
-      .populate('region')
-      .populate('district')
-      .populate('neighborhood')
+      .populate('address.region')
+      .populate('address.district')
+      .populate('address.neighborhood')
       .populate('workplaces')
       .lean();
   }
@@ -55,7 +55,7 @@ export class InspectorService {
 
     if (!isMatch) throw new BadRequestException('Parolda xatolik bor!');
 
-    const inspector = await this.findByAuthId(auth.id as string);
+    const inspector = await this.findByAuthId(auth._id as string);
     const access_token = await this.jwtService.signAsync({
       _id: auth._id,
       username: auth.username,
@@ -84,8 +84,12 @@ export class InspectorService {
       await this.inspectorWorkplaceService.createMany(inspectorWorkplaces);
 
     return {
-      ...inspector,
+      ...inspector.toObject(),
       workplaces,
     };
+  }
+
+  async findMe(auth_id: string) {
+    return await this.findByAuthId(auth_id);
   }
 }

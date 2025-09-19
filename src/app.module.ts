@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { InspectorModule } from './modules/inspector/inspector.module';
+import { RegionModule } from './modules/region/region.module';
+import { DistrictModule } from './modules/district/district.module';
+import { NeighborhoodModule } from './modules/neighborhood/neighborhood.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { InspectorModule } from './modules/inspector/inspector.module';
       }),
     }),
     InspectorModule,
+    RegionModule,
+    DistrictModule,
+    NeighborhoodModule,
   ],
   controllers: [],
   providers: [],

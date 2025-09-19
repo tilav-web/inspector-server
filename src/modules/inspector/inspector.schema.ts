@@ -64,3 +64,13 @@ export class Inspector {
 }
 
 export const InspectorSchema = SchemaFactory.createForClass(Inspector);
+
+InspectorSchema.virtual('workplaces', {
+  ref: 'InspectorWorkplace',
+  localField: '_id',
+  foreignField: 'inspector',
+  justOne: false,
+});
+
+InspectorSchema.set('toObject', { virtuals: true });
+InspectorSchema.set('toJSON', { virtuals: true });
