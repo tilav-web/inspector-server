@@ -3,6 +3,6 @@ export class CreateInspectorWorkplaceDto {
   region: string;
   district: string;
   neighborhood: string;
-  desc?: string;
+  note?: string;
   status: boolean;
 }

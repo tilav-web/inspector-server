@@ -1,47 +1,49 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Auth, AuthDocument } from './auth.schema';
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { InspectorService } from '../inspector/inspector.service';
-import { JwtService } from '@nestjs/jwt';
+import { CreateAuthDto } from './dto/create-auth.dto';
+import { AuthRoleEnum } from 'src/enums/auth-role.enum';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    @InjectModel(Auth.name) private model: Model<AuthDocument>,
-    private readonly inspectorService: InspectorService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(@InjectModel(Auth.name) private model: Model<AuthDocument>) {}
 
   async findById(id: string) {
     return this.model.findById(id).lean();
   }
 
-  async login({ username, password }: { username: string; password: string }) {
-    if (!username)
-      throw new BadRequestException('Foydalanuvchi nomi kiritilmagan!');
-    if (!password) throw new BadRequestException('Parol kiritilmagan!');
+  async findByUsername(username: string) {
+    return this.model.findOne({ username }).lean();
+  }
 
-    const auth = await this.model.findOne({ username }).lean();
-    if (!auth)
-      throw new BadRequestException(
-        'Bu kabi inspektor tizimda mavjut emas. Username tekshiring!',
+  async create({ username, password, role, auth_id }: CreateAuthDto) {
+    const auth = await this.findById(auth_id);
+
+    if (role === AuthRoleEnum.REGION && auth?.role !== AuthRoleEnum.STATE)
+      throw new ForbiddenException(
+        `Siz ${role} turidagi inspector yaratish huquqiga ega emassiz!`,
       );
 
-    const isMatch = await bcrypt.compare(password, auth.password);
+    if (
+      role === AuthRoleEnum.DISTRICT &&
+      auth?.role !== AuthRoleEnum.STATE &&
+      auth?.role !== AuthRoleEnum.REGION
+    )
+      throw new ForbiddenException(
+        `Siz ${role} turidagi inspector yaratish huquqiga ega emassiz!`,
+      );
 
-    if (!isMatch) throw new BadRequestException('Parolda xatolik bor!');
+    if (
+      role === AuthRoleEnum.NEIGHBORHOOD &&
+      auth?.role !== AuthRoleEnum.STATE &&
+      auth?.role !== AuthRoleEnum.REGION &&
+      auth?.role !== AuthRoleEnum.DISTRICT
+    )
+      throw new ForbiddenException(
+        `Siz ${role} turidagi inspector yaratish huquqiga ega emassiz!`,
+      );
 
-    const inspector = await this.inspectorService.findByAuthId(
-      auth._id as string,
-    );
-    const access_token = await this.jwtService.signAsync({
-      _id: auth._id,
-      username: auth.username,
-      role: auth.role,
-    });
-
-    return { inspector, access_token };
+    return await this.model.create({ username, password, role });
   }
 }

@@ -5,9 +5,6 @@ export type DistrictDocument = District & Document;
 
 @Schema({ timestamps: true })
 export class District {
-  @Prop({ type: Types.ObjectId, ref: 'Inspector', required: true })
-  inspector: Types.ObjectId;
-
   @Prop({ type: Types.ObjectId, ref: 'Region', required: true })
   region: Types.ObjectId;
 
