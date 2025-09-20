@@ -4,12 +4,14 @@ import {
   Get,
   HttpException,
   InternalServerErrorException,
+  Param,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { InspectorService } from './inspector.service';
+import { InspectorService, ISearchQuery } from './inspector.service';
 import { CreateInspectorDto } from './dto/create-inspector.dto';
 import { type IRequestCustom } from 'src/interfaces/request-custom.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -77,6 +79,61 @@ export class InspectorController {
     try {
       const auth = req.user;
       const result = await this.service.findMe(auth?._id as string);
+      return result;
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw new InternalServerErrorException(
+        "Inspektor yaratishda xatolik ketdi. Birozdan so'ng qayta urinib ko'ring!",
+      );
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/')
+  async findAll(
+    @Req() req: IRequestCustom,
+    @Query() dto: ISearchQuery & { page?: number; limit?: number },
+  ) {
+    try {
+      const auth = req.user;
+      const result = await this.service.findAll({
+        auth_id: auth?._id as string,
+        ...dto,
+      });
+      return result;
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw new InternalServerErrorException(
+        "Inspektor yaratishda xatolik ketdi. Birozdan so'ng qayta urinib ko'ring!",
+      );
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id')
+  async findById(@Param('id') id: string, @Req() req: IRequestCustom) {
+    try {
+      const auth = req.user;
+      const result = await this.service.findById({
+        id,
+        auth_id: auth?._id as string,
+      });
       return result;
     } catch (error) {
       console.error(error);

@@ -17,4 +17,8 @@ export class InspectorWorkplaceService {
   async createMany(dto: CreateInspectorWorkplaceDto[]) {
     return this.model.insertMany(dto);
   }
+
+  async findByInspectorId(inspector: string) {
+    return this.model.findOne({ inspector, status: true });
+  }
 }
