@@ -14,6 +14,8 @@ import { CreateInspectorDto } from './dto/create-inspector.dto';
 import { InspectorWorkplaceService } from '../inspector-workplace/inspector-workplace.service';
 import { GenderEnum } from 'src/enums/gender.enum';
 import { AuthRoleEnum } from 'src/enums/auth-role.enum';
+import { FileService } from '../file/file.service';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ISearchQuery {
   full_name?: string;
@@ -31,6 +33,7 @@ export class InspectorService {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly inspectorWorkplaceService: InspectorWorkplaceService,
+    private readonly fileService: FileService,
   ) {}
 
   async findById({ id, auth_id }: { id: string; auth_id: string }) {
@@ -193,7 +196,14 @@ export class InspectorService {
       .populate('address.region')
       .populate('address.district')
       .populate('address.neighborhood')
-      .populate('workplaces')
+      .populate({
+        path: 'workplaces',
+        populate: [
+          { path: 'region' },
+          { path: 'district' },
+          { path: 'neighborhood' },
+        ],
+      })
       .lean();
   }
 
@@ -213,21 +223,40 @@ export class InspectorService {
     if (!isMatch) throw new BadRequestException('Parolda xatolik bor!');
 
     const inspector = await this.findByAuthId(auth._id as string);
-    const access_token = await this.jwtService.signAsync({
-      _id: auth._id,
-      username: auth.username,
-      role: auth.role,
-    });
+    const access_token = this.jwtService.sign(
+      {
+        _id: auth._id,
+        username: auth.username,
+        role: auth.role,
+      },
+      { expiresIn: '15m' },
+    );
 
-    return { inspector, access_token };
+    const refresh_token = this.jwtService.sign(
+      {
+        _id: auth._id,
+        username: auth.username,
+        role: auth.role,
+      },
+      { expiresIn: '7d' },
+    );
+
+    return { inspector, access_token, refresh_token };
   }
 
   async create(dto: CreateInspectorDto) {
     const { inspector_details, auth_details, workplaces_details } = dto;
     const auth = await this.authService.create(auth_details);
+
+    const photo = await this.fileService.uploadPhoto({
+      file: dto.inspector_details?.photo,
+      id: uuidv4(),
+    });
+
     const inspector = await this.model.create({
       ...inspector_details,
       auth: auth._id,
+      photo,
     });
 
     const inspectorWorkplaces = workplaces_details.map((workplace) => {
@@ -248,5 +277,15 @@ export class InspectorService {
 
   async findMe(auth_id: string) {
     return await this.findByAuthId(auth_id);
+  }
+
+  async refresh(refresh_token: string) {
+    const payload = await this.jwtService.verifyAsync<{
+      _id: string;
+      username: string;
+      role: AuthRoleEnum;
+    }>(refresh_token);
+
+    return payload;
   }
 }

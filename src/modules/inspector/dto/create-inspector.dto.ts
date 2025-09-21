@@ -22,6 +22,7 @@ export class CreateInspectorDto {
     gender: GenderEnum;
     phone: string;
     nationality: string; // millati
+    photo: Express.Multer.File;
   };
   workplaces_details: CreateInspectorWorkplaceDto[];
 }

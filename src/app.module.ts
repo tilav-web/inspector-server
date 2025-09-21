@@ -5,6 +5,7 @@ import { InspectorModule } from './modules/inspector/inspector.module';
 import { RegionModule } from './modules/region/region.module';
 import { DistrictModule } from './modules/district/district.module';
 import { NeighborhoodModule } from './modules/neighborhood/neighborhood.module';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NeighborhoodModule } from './modules/neighborhood/neighborhood.module';
     RegionModule,
     DistrictModule,
     NeighborhoodModule,
+    FileModule,
   ],
   controllers: [],
   providers: [],

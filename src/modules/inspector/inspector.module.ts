@@ -8,6 +8,7 @@ import { JwtStrategy } from '../auth/guards/jwt.strategy';
 import { InspectorController } from './inspector.controller';
 import { InspectorWorkplaceModule } from '../inspector-workplace/inspector-workplace.module';
 import { ConfigService } from '@nestjs/config';
+import { FileModule } from '../file/file.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ConfigService } from '@nestjs/config';
       }),
     }),
     InspectorWorkplaceModule,
+    FileModule,
   ],
   controllers: [InspectorController],
   providers: [InspectorService, JwtStrategy],
