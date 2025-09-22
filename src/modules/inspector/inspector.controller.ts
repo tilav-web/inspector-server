@@ -152,7 +152,7 @@ export class InspectorController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('/:id')
+  @Get('/by/:id')
   async findById(@Param('id') id: string, @Req() req: IRequestCustom) {
     try {
       const auth = req.user;

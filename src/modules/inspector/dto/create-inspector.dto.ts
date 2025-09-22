@@ -24,5 +24,5 @@ export class CreateInspectorDto {
     nationality: string; // millati
     photo: Express.Multer.File;
   };
-  workplaces_details: CreateInspectorWorkplaceDto[];
+  workplace: CreateInspectorWorkplaceDto;
 }

@@ -245,7 +245,7 @@ export class InspectorService {
   }
 
   async create(dto: CreateInspectorDto) {
-    const { inspector_details, auth_details, workplaces_details } = dto;
+    const { inspector_details, auth_details, workplace } = dto;
     const auth = await this.authService.create(auth_details);
 
     const photo = await this.fileService.uploadPhoto({
@@ -259,19 +259,14 @@ export class InspectorService {
       photo,
     });
 
-    const inspectorWorkplaces = workplaces_details.map((workplace) => {
-      return {
-        ...workplace,
-        inspector: inspector._id,
-      };
+    const workplaceNew = await this.inspectorWorkplaceService.create({
+      ...workplace,
+      inspector: inspector._id as string,
     });
-
-    const workplaces =
-      await this.inspectorWorkplaceService.createMany(inspectorWorkplaces);
 
     return {
       ...inspector.toObject(),
-      workplaces,
+      workplaces: [workplaceNew],
     };
   }
 
@@ -286,6 +281,12 @@ export class InspectorService {
       role: AuthRoleEnum;
     }>(refresh_token);
 
-    return payload;
+    const access_token = this.jwtService.sign({
+      _id: payload._id,
+      username: payload.username,
+      role: payload.role,
+    });
+
+    return access_token;
   }
 }
